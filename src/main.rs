@@ -1,12 +1,10 @@
-use std::io::{self, Write};
+use std::io;
 
 fn get_input() -> String {
     let mut input: String = String::new();
-
     io::stdin()
         .read_line(&mut input)
         .expect("Failed to read line");
-
     input
 }
 
@@ -35,27 +33,27 @@ fn check_input(input: &str) -> Result<u32, CheckInputError> {
 }
 
 fn calculate_coins(mut value: u32) -> Vec<u32> {
-    let cointypes = [50, 20, 10, 5];
-    let mut result = Vec::new();
-    for &coin in &cointypes {
-        let count = value / coin;
-        result.push(count);
-        value -= count * coin;
-    }
-    result
+    const COINTYPES: [u32; 4] = [50, 20, 10, 5];
+    COINTYPES
+        .iter()
+        .map(|&coin| {
+            let count = value / coin;
+            value -= count * coin;
+            count
+        })
+        .collect()
 }
 
 fn main() {
     println!("Please enter a coin >=5c || <= 95c. Type \"quit\" to exit.");
-    io::stdout().flush().unwrap();
 
     loop {
-        let inputstring = get_input();
-        if check_quit(&inputstring) {
+        let input = get_input();
+        if check_quit(&input) {
             println!("Exiting the program.");
             break;
         }
-        match check_input(&inputstring) {
+        match check_input(&input) {
             Ok(value) => {
                 let coins = calculate_coins(value);
                 println!("You entered: {value}");
@@ -64,15 +62,17 @@ fn main() {
                     coins[0], coins[1], coins[2], coins[3]
                 );
             }
-            Err(CheckInputError::NotANumber) => {
-                println!("Error: Input is not a number.");
-            }
-            Err(CheckInputError::OutOfRange) => {
-                println!("Error: Input must be between 5c and 95c.");
-            }
-            Err(CheckInputError::NotDivisibleBy5) => {
-                println!("Error: Input must be divisible by 5.");
-            }
+            Err(e) => match e {
+                CheckInputError::NotANumber => {
+                    println!("Error: Input is not a number.");
+                }
+                CheckInputError::OutOfRange => {
+                    println!("Error: Input must be between 5c and 95c.");
+                }
+                CheckInputError::NotDivisibleBy5 => {
+                    println!("Error: Input must be divisible by 5.");
+                }
+            },
         }
     }
 }
